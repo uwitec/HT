@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.tarena.ht.mapper.UserMapper">
+
+	<!-- 查询用户的全部信息 -->
+	<select id="findUserList" resultMap="UserRM">
+		SELECT * FROM
+        (SELECT * FROM
+        USER_P U
+               LEFT JOIN
+       ( SELECT P.USER_INFO_ID,P.NAME,P.CARD_NO,P.MANAGER_ID,M_NAME,P.JOIN_DATE,P.SALARY,P.BIRTHDAY,P.GENDER,P.STATION,P.TELEPHONE,P.USER_LEVEL,P.REMARK,P.ORDER_NO FROM 
+               USER_INFO_P P
+               LEFT JOIN
+               (SELECT USER_INFO_P.USER_INFO_ID AS M_ID ,NAME AS M_NAME FROM USER_INFO_P) M
+                       ON P.MANAGER_ID=M.M_ID) A
+                ON U.USER_ID = A.USER_INFO_ID) B
+                
+                LEFT JOIN
+          (SELECT DEPT_ID AS D_ID,DEPT_NAME FROM DEPT_P) D
+                  ON B.DEPT_ID=D.D_ID 
+	</select>
+	
+	<resultMap type="User" id="UserRM" autoMapping="true">
+		<id property="userId" column="USER_ID"/>
+
+		<!-- 封装UserInfo信息 -->
+		<association property="userInfo" javaType="UserInfo">
+			<id property="userInfoId" column="USER_INFO_ID"/>
+			<result property="name" column="NAME"/>
+			<result property="cardNo" column="CARD_NO"/>
+			<result property="joinDate" column="JOIN_DATE"/>
+			<result property="salary" column="SALARY"/>
+			<result property="birthday" column="BIRTHDAY"/>
+			<result property="gender" column="GENDER"/>
+			<result property="station" column="STATION"/>
+			<result property="telephone" column="TELEPHONE"/>
+			<result property="userLevel" column="USER_LEVEL"/>
+			<result property="remark" column="REMARK"/>
+			<result property="orderNo" column="ORDER_NO"/>
+			
+			<association property="manager" javaType="UserInfo">
+				<id property="userInfoId" column="MANAGER_ID"></id>
+				<result property="name" column="M_NAME"/>
+			</association>
+		</association>
+		
+		<!-- 封装部门 -->
+		<association property="dept" javaType="Dept">
+			<id property="deptId" column="D_ID"/>
+			<result property="deptName" column="DEPT_NAME"/>
+		</association>
+	</resultMap>
+	
+	
+	
+	<update id="updateState">
+		update user_p set state = #{state} where user_id in(
+			<foreach collection="userIds" item="id" separator=",">
+				#{id}
+			</foreach>
+		)
+	</update>
+	
+	
+	
+	<delete id="deleteUsers">
+		delete from user_p where user_id in(
+			<foreach collection="array" item="id" separator=",">
+				#{id}
+			</foreach>
+		)
+	</delete>
+	
+	<insert id="saveUser">
+		insert into user_p values(
+			#{userId},
+			#{dept.deptId},
+			#{username},
+			#{password},
+			#{state},
+			#{createBy,jdbcType=VARCHAR},
+			#{createDept,jdbcType=VARCHAR},
+			#{createTime,jdbcType=DATE},
+			#{updateBy,jdbcType=VARCHAR},
+			#{updateTime,jdbcType=DATE}
+		)
+	</insert>
+	
+	
+	
+	
+	
+	
+	<!-- 保存用户和角色信息，保存到Role_User_P中 -->
+	<insert id="saveRoleUser">
+		insert into Role_user_p values (#{roleId},#{userId})
+	</insert>
+	
+	
+	<!-- 根据用户名和密码查询用户 -->
+	<select id="findUserByU_P" resultType="User">
+		select * from user_p where username=#{username} and password=#{password}
+	</select>
+	
+	<!-- 根据username查询用户信息 -->
+	<select id="findUserByUsername" resultMap="UserRM">
+		SELECT * FROM
+        (SELECT * FROM
+        USER_P U
+               LEFT JOIN
+       ( SELECT P.USER_INFO_ID,P.NAME,P.CARD_NO,P.MANAGER_ID,M_NAME,P.JOIN_DATE,P.SALARY,P.BIRTHDAY,P.GENDER,P.STATION,P.TELEPHONE,P.USER_LEVEL,P.REMARK,P.ORDER_NO FROM 
+               USER_INFO_P P
+               LEFT JOIN
+               (SELECT USER_INFO_P.USER_INFO_ID AS M_ID ,NAME AS M_NAME FROM USER_INFO_P) M
+                       ON P.MANAGER_ID=M.M_ID) A
+                ON U.USER_ID = A.USER_INFO_ID) B
+                
+                LEFT JOIN
+          (SELECT DEPT_ID AS D_ID,DEPT_NAME FROM DEPT_P) D
+                  ON B.DEPT_ID=D.D_ID 
+                  where username=#{username}
+	</select>
+	
+	
+</mapper>

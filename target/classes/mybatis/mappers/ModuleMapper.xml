@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.tarena.ht.mapper.ModuleMapper">
+
+	<select id="findModuleList" resultMap="ModuleRM">
+		SELECT * FROM
+  (SELECT * FROM MODULE_P) M
+          LEFT JOIN
+  (SELECT MODULE_ID AS P_ID,NAME AS P_NAME FROM MODULE_P) P
+         ON M.PARENT_ID = P.P_ID
+	</select>
+	
+	<resultMap type="Module" id="ModuleRM" autoMapping="true">
+		<id column="MODULE_ID" property="moduleId"/>
+		<!-- 父级模块 -->
+		<association property="parentModule" javaType="Module">
+			<id column="P_ID" property="moduleId"/>
+			<result column="P_NAME" property="name"/>
+		</association>
+	</resultMap>
+	
+	
+	
+	
+	
+	<!-- 保存模块信息 -->
+	<insert id="saveModule">
+		insert into module_p values(
+			#{moduleId},
+			#{parentModule.moduleId},
+			#{name},
+			#{ctype},
+			#{state},
+			#{orderNo},
+			#{remark,jdbcType=VARCHAR},
+			#{createBy,jdbcType=VARCHAR},
+			#{createDept,jdbcType=VARCHAR},
+			#{createTime,jdbcType=DATE},
+			#{updateBy,jdbcType=VARCHAR},
+			#{updateTime,jdbcType=DATE}
+)
+	
+	</insert>
+	
+	
+	
+	
+	
+	<select id="findModuleById" resultMap="ModuleRM">
+		SELECT * FROM
+  (SELECT * FROM MODULE_P) M
+          LEFT JOIN
+  (SELECT MODULE_ID AS P_ID,NAME AS P_NAME FROM MODULE_P) P
+         ON M.PARENT_ID = P.P_ID
+	where module_id = #{moduleId}
+	</select>
+	
+	
+	
+	
+	
+	
+	<!-- 查询上级模块信息，排除自己-->
+	<select id="findParentModuleList" resultType="Module">
+		select * from module_p where module_id != #{moduleId}
+	</select>
+	
+	
+	
+	
+	
+	<!-- 更新操作 -->
+	<update id="updateModule">
+		update module_p <set>
+			parent_id = #{parentModule.moduleId},
+			name = #{name},
+			ctype= #{ctype},
+			<if test="state!=0">state=#{state,jdbcType=INTEGER},</if>
+			order_no=#{orderNo},
+			remark=#{remark,jdbcType=VARCHAR},
+			<if test="createBy !=null">create_by=#{createBy,jdbcType=VARCHAR},</if>
+			<if test="createDept !=null">create_dept=#{createDept,jdbcType=VARCHAR},</if>
+			<if test="createTime !=null">create_time=#{createTime,jdbcType=VARCHAR},</if>
+			<if test="updateBy !=null">update_by=#{updateBy,jdbcType=VARCHAR},</if>
+			<if test="updateTime !=null">update_time=#{updateTime,jdbcType=VARCHAR}</if>
+		</set>
+		where module_Id = #{moduleId}
+	</update>
+	
+	
+<!-- 批量的删除 -->
+	<!-- <delete id="deleteModules">
+		delete from module_p where module_id in (
+		
+		<foreach collection="array" items="id" separator=",">
+			#{id}
+		</foreach>
+		)
+	</delete> -->
+	
+	
+</mapper>
+
+
+
+
+
+
+
+
+

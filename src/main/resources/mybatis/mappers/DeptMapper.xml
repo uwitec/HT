@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.tarena.ht.mapper.DeptMapper">
+	<select id="findDeptList" resultMap="deptRM">
+		select * from
+        dept_p d
+       left join 
+       (select dept_p.dept_id as p_id,dept_p.dept_name as p_name from dept_p) p
+       on d.parent_id=p.p_id
+       order by dept_id
+	</select>
+	
+	<!--autoMapping="true" 开启了驼峰规则，可以自动映射  -->
+	<resultMap type="Dept" id="deptRM" autoMapping="true">
+		<id property="deptId" column="DEPT_ID"/>
+		
+		<association property="parentDept" javaType="Dept">
+			<id property="deptId" column="P_ID"/>
+			<result property="deptName" column="P_NAME"/>
+		</association>
+	</resultMap>
+	
+	
+	<update id="updateState">
+		update dept_p set state=#{state} where dept_id in (
+			<!-- collection 可以遍历list、array、map中的key -->
+			<foreach collection="ids" separator="," item="id">
+				#{id}
+			</foreach>
+		)
+	</update>
+	
+	<delete id="deleteDepts">
+		delete from dept_p where dept_id in(
+			<foreach collection="array" separator="," item="id">
+				#{id}
+			</foreach>
+		)
+		
+	</delete>
+	
+	
+	<!-- 部门新增 -->
+	<insert id="saveDept">
+		insert into dept_p values (
+			#{deptId},
+			#{deptName},
+			#{parentDept.deptId},
+			#{state},
+			#{createBy,jdbcType=VARCHAR},
+			#{createDept,jdbcType=VARCHAR},
+			#{createTime,jdbcType=DATE},
+			#{updateBy,jdbcType=VARCHAR},
+			#{updateTime,jdbcType=DATE}
+		)
+	</insert>
+	
+	
+	<select id="findOneDept" resultMap="aa">
+		  select dept_id ,dept_name,p.p_id,p.p_name,state,create_by,create_dept,create_time,update_by,update_time from
+  	(select dept_id as p_id,dept_name as p_name from dept_p) p
+          right join
+          dept_p s
+          on p.p_id=s.parent_id
+		where dept_id = #{deptId}		
+	</select>
+	<resultMap type="Dept" id="aa" autoMapping="true">
+		<id column="DEPT_ID" property="deptId"/>
+		<association property="parentDept" javaType="Dept">
+			<id column="P_ID" property="deptId"/>
+			<result column="P_NAME" property="deptName"/>
+		</association>
+	</resultMap>
+	
+	
+	<update id="updateDept">
+		update dept_p 
+			<set>
+			dept_name=#{deptName},
+			parent_id=#{parentDept.deptId},
+			state=#{state},
+			<if test="createBy !=null">create_by=#{createBy,jdbcType=VARCHAR},</if>
+			<if test="createDept !=null">create_dept=#{createDept,jdbcType=VARCHAR},</if>
+			<if test="createTime !=null">create_time=#{createTime,jdbcType=VARCHAR},</if>
+			<if test="updateBy !=null">update_by=#{updateBy,jdbcType=VARCHAR},</if>
+			<if test="updateTime !=null">update_time=#{updateTime,jdbcType=VARCHAR}</if>
+			</set>
+			where dept_id=#{deptId}
+	</update>
+</mapper>
+
+
+
+
+
+
+
+
+
